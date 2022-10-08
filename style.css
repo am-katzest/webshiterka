@@ -1,0 +1,21 @@
+#square {
+    /* these styles will let the divs line up next to each other
+       while accepting dimensions */
+    display: block;
+    float: left;
+
+    width: 2px;
+    height: 2px;
+    background: black;
+
+    /* a small margin to separate the blocks */
+    margin: 0px;
+}
+#hacky{
+    display: block;
+    float: left;
+    width: 10000px;
+    height: 0px;
+    background: pink;
+    margin: 0px;
+}
