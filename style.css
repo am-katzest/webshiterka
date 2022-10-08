@@ -21,7 +21,8 @@
     width:100vw;
     height:100vh;
     font-size:1vw;
-    background:gray;
+    background:#449;
+    filter: blur(0.4vw);
 }
 #plane{
     position: absolute;
@@ -29,4 +30,5 @@
     z-index: 11;
     left:20vw;
     font-size:3px;
+    filter: blur(1px);
 }
