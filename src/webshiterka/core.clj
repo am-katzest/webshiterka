@@ -9,20 +9,25 @@
        m/get-pixels
        (mapv c/components-argb)
        (partition (m/width image))))
+
 (def space "<div id=\"hacky\"/>")
-(def pixel_width 2)
+
 (defn htmlize-color [colors] (apply  format "#%02x%02x%02x%02x" colors))
+
 (defn make-pixel [[count colors]]
   (let [cstr (htmlize-color colors)
         width (if (= count 1) ""
-                  (format "width:%dpx;" (* pixel_width count)))]
+                  (format "width:%dem;" count))]
     (format "<div id=\"square\" style=\"background:%s;%s\"></div>" cstr width)))
+
 (defn transform-pixel-array-into-html [arr]
   (apply str (mapcat (fn [row] (concat [space] (map make-pixel row))) arr)))
+
 (defn group-pixels [row]
   (->> row
        (partition-by identity)
        (map (juxt count first))))
+
 (defn -main
   [template in]
   (let [html (slurp template)
@@ -35,4 +40,4 @@
          (map group-pixels)
          transform-pixel-array-into-html
          insert-into-template
-         (println))))
+         println)))
