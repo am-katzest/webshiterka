@@ -1,8 +1,8 @@
 (ns webshiterka.core
   (:require
    [mikera.image.core :as m]
-   [mikera.image.colours :as c]))
-(defn group-pixels [row] (->> row (partition-by identity) (map (juxt first count))))
+   [mikera.image.colours :as c]
+   [clojure.string :as string]))
 
 (defn split-into-pixels [image]
   (->> image
@@ -10,17 +10,29 @@
        (mapv c/components-argb)
        (partition (m/width image))))
 (def space "<div id=\"hacky\"/>")
+(def pixel_width 2)
 (defn htmlize-color [colors] (apply  format "#%02x%02x%02x%02x" colors))
-(defn make-pixel [colors]
-  (format "<div id=\"square\" style=\"background:%s;\"></div>" (htmlize-color colors)))
+(defn make-pixel [[count colors]]
+  (let [cstr (htmlize-color colors)
+        width (if (= count 1) ""
+                  (format "width:%dpx;" (* pixel_width count)))]
+    (format "<div id=\"square\" style=\"background:%s;%s\"></div>" cstr width)))
 (defn transform-pixel-array-into-html [arr]
   (apply str (mapcat (fn [row] (concat [space] (map make-pixel row))) arr)))
-
+(defn group-pixels [row]
+  (->> row
+       (partition-by identity)
+       (map (juxt count first))))
 (defn -main
-  [in]
-  (->> in
-       java.io.File.
-       m/load-image
-       split-into-pixels
-       transform-pixel-array-into-html
-       (println)))
+  [template in]
+  (let [html (slurp template)
+        insert-into-template
+        #(string/replace html #"%%%" %1)]
+    (->> in
+         java.io.File.
+         m/load-image
+         split-into-pixels
+         (map group-pixels)
+         transform-pixel-array-into-html
+         insert-into-template
+         (println))))
