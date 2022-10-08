@@ -19,7 +19,7 @@
     (format "<div id=\"pixel\" style=\"background:%s;%s\"></div>" cstr width)))
 
 (defn transform-pixel-array-into-html [arr]
-  (apply str (mapcat (fn [row] (concat ["<div id=\"newline\"/>"] (map make-pixel row))) arr)))
+  (apply str (mapcat (fn [row] (concat ["<div id=\"newline\"></div>"] (map make-pixel row))) arr)))
 
 (defn group-pixels [row]
   (->> row
