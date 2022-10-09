@@ -28,9 +28,9 @@
 #plane{
     position: absolute;
     top: 20vh;
-    width: 1000px;
+    width: 1500px;
     z-index: 11;
     left:20vw;
     font-size:3px;
-    filter: blur(2px);
+    filter: blur(1.5px);
 }

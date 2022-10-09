@@ -14,8 +14,12 @@
             used' (assoc used color key)]
         (reset! palette {:ctr ctr' :used used'})
         key))))
+(def widths (atom #{}))
+(defn add-width [width] (swap! widths conj width))
 (defn make-palette [dict]
   (apply str (map (fn [[color tag]] (format "%s{background:%s;}\n" tag color)) dict)))
+(defn make-widths [lst]
+  (apply str (map #(format "[w=\"%d\"]{width:%dem !important;}\n" %1 %1) lst)))
 (defn split-into-pixels [image]
   (->> image
        m/get-pixels
@@ -30,7 +34,8 @@
   (let [cstr (htmlize-color colors)
         id (add-to-pallette cstr)
         width (if (= count 1) ""
-                  (format " style=\"width:%dem;\"" count))]
+                  (do (add-width count)
+                      (format " w=%d" count)))]
     (format "<%s%s></%s>" id width id)))
 
 (defn transform-pixel-array-into-html [arr]
@@ -60,4 +65,5 @@
          (partition 2)
          (reduce mod-template html)
          println))
-  (spit "palette.css" (make-palette (:used @palette))))
+  (spit "palette.css" (str (make-palette (:used @palette))
+                           (make-widths @widths))))
