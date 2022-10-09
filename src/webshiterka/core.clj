@@ -5,6 +5,7 @@
    [clojure.string :as string]))
 
 (def palette (atom {:ctr 0 :used {}}))
+
 (defn add-to-pallette [{:keys [ctr used] :as present} color]
   (if (contains? used color)
     present
@@ -12,15 +13,21 @@
           key (str "x" ctr')
           used' (assoc used color key)]
       {:ctr ctr' :used used'})))
+
 (defn get-color-id [color]
   (swap! palette add-to-pallette color)
   (get-in @palette [:used color]))
-(def widths (atom #{}))
-(defn add-width [width] (swap! widths conj width))
-(defn make-palette [dict]
+
+(defn palette2css [dict]
   (apply str (map (fn [[color tag]] (format "%s{background:%s;}\n" tag color)) dict)))
-(defn make-widths [lst]
+
+(def widths (atom #{}))
+
+(defn add-width [width] (swap! widths conj width))
+
+(defn widths2css [lst]
   (apply str (map #(format "[w=\"%d\"]{width:%dem !important;}\n" %1 %1) lst)))
+
 (defn split-into-pixels [image]
   (->> image
        m/get-pixels
@@ -66,5 +73,5 @@
          (partition 2)
          (reduce mod-template html)
          println))
-  (spit "palette.css" (str (make-palette (:used @palette))
-                           (make-widths @widths))))
+  (spit "palette.css" (str (palette2css (:used @palette))
+                           (widths2css @widths))))
