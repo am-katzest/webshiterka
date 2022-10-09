@@ -1,10 +1,11 @@
-(defproject webshiterka "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+(defproject todoot "0.1.0-SNAPSHOT"
+  :description "FIXME: write this!"
   :url "http://example.com/FIXME"
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.10.0"]
-                 [net.mikera/imagez "0.12.0"]
-                 [hiccup "1.0.5"]]
-  :main webshiterka.core
-  :repl-options {:init-ns webshiterka.core})
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.339"]]
+  :jvm-opts ^:replace ["-Xmx1g" "-server"]
+  :plugins [[lein-npm "0.6.2"]]
+  :npm {:dependencies [[source-map-support "0.4.0"]]}
+  :source-paths ["src" "target/classes"]
+  :clean-targets [:target-path "out" "release"]
+  :target-path "target")
