@@ -4,16 +4,17 @@
    [mikera.image.colours :as c]
    [clojure.string :as string]))
 
-(def palette (atom {:ctr 0 :used {}}))                  ; thread unsafe, bthere's one thread ¯\_(ツ)_/¯
-(defn add-to-pallette [color]
-  (let [{:keys [ctr used]} @palette]
-    (if-let [present (get used color)]
-      present
-      (let [ctr' (inc ctr)
-            key (str "x" ctr')
-            used' (assoc used color key)]
-        (reset! palette {:ctr ctr' :used used'})
-        key))))
+(def palette (atom {:ctr 0 :used {}}))
+(defn add-to-pallette [{:keys [ctr used] :as present} color]
+  (if (contains? used color)
+    present
+    (let [ctr' (inc ctr)
+          key (str "x" ctr')
+          used' (assoc used color key)]
+      {:ctr ctr' :used used'})))
+(defn get-color-id [color]
+  (swap! palette add-to-pallette color)
+  (get-in @palette [:used color]))
 (def widths (atom #{}))
 (defn add-width [width] (swap! widths conj width))
 (defn make-palette [dict]
@@ -32,7 +33,7 @@
 
 (defn make-pixel [[count colors]]
   (let [cstr (htmlize-color colors)
-        id (add-to-pallette cstr)
+        id (get-color-id cstr)
         width (if (= count 1) ""
                   (do (add-width count)
                       (format " w=%d" count)))]

@@ -1,10 +1,10 @@
 #background > *,
 #plane > * {
-    /* uwu */
+    /* every pixel */
     display: block;
     float: left;
-    width: 1em; /* configured via font-size in parent element*/
-    height: 1em;
+    width: 1em; /*default*/
+    height: 1em; /* configured via font-size in parent element*/
 }
 #newline{
     display: block;
