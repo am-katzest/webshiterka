@@ -20,15 +20,15 @@
     z-index: 10;
     width:100vw;
     height:100vh;
-    font-size:1vw;
+    font-size:2vw;
     background:#449;
-    filter: blur(0.4vw);
+    filter: blur(1vw);
 }
 #plane{
     position: absolute;
     top: 20vh;
     z-index: 11;
     left:20vw;
-    font-size:3px;
-    filter: blur(1px);
+    font-size:6px;
+    filter: blur(4px);
 }

@@ -9,7 +9,7 @@ finished.html: smolplane.png smolsky.png
 	lein run template.html %background% smolsky.png %plane% smolplane.png > finished.html
 
 smolsky.png:
-	convert sky.png +dither -gravity South -chop 0x25 -blur 10 -posterize 15 smolsky.png
+	convert sky.png +dither -gravity South -resize 50 -chop 0x35 -blur 5 -posterize 8 smolsky.png
 
 smolplane.png:
-	convert plane.png +dither  -resize 75% -posterize 10 smolplane.png
+	convert plane.png +dither  -resize 25% -posterize 8 smolplane.png
