@@ -27,6 +27,7 @@
 #plane{
     position: absolute;
     top: 20vh;
+    width: 650px;
     z-index: 11;
     left:20vw;
     font-size:6px;
