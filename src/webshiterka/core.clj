@@ -15,7 +15,7 @@
         (reset! palette {:ctr ctr' :used used'})
         key))))
 (defn make-palette [dict]
-  (apply str (map (fn [[color tag]] (format "#%s{background:%s;}\n" tag color)) dict)))
+  (apply str (map (fn [[color tag]] (format "%s{background:%s;}\n" tag color)) dict)))
 (defn split-into-pixels [image]
   (->> image
        m/get-pixels
@@ -31,7 +31,7 @@
         id (add-to-pallette cstr)
         width (if (= count 1) ""
                   (format " style=\"width:%dem;\"" count))]
-    (format "<div id=\"%s\"%s></div>" id width)))
+    (format "<%s%s></%s>" id width id)))
 
 (defn transform-pixel-array-into-html [arr]
   (apply str (mapcat (fn [row] (concat ["<div id=\"newline\"></div>"] (map make-pixel row))) arr)))
