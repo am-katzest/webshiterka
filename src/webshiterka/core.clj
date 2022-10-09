@@ -4,6 +4,18 @@
    [mikera.image.colours :as c]
    [clojure.string :as string]))
 
+(def palette (atom {:ctr 0 :used {}}))                  ; thread unsafe, bthere's one thread ¯\_(ツ)_/¯
+(defn add-to-pallette [color]
+  (let [{:keys [ctr used]} @palette]
+    (if-let [present (get used color)]
+      present
+      (let [ctr' (inc ctr)
+            key (str "x" ctr')
+            used' (assoc used color key)]
+        (reset! palette {:ctr ctr' :used used'})
+        key))))
+(defn make-palette [dict]
+  (apply str (map (fn [[color tag]] (format "#%s{background:%s;}\n" tag color)) dict)))
 (defn split-into-pixels [image]
   (->> image
        m/get-pixels
@@ -16,9 +28,10 @@
 
 (defn make-pixel [[count colors]]
   (let [cstr (htmlize-color colors)
+        id (add-to-pallette cstr)
         width (if (= count 1) ""
-                  (format "width:%dem;" count))]
-    (format "<div style=\"background:%s;%s\"></div>" cstr width)))
+                  (format " style=\"width:%dem;\"" count))]
+    (format "<div id=\"%s\"%s></div>" id width)))
 
 (defn transform-pixel-array-into-html [arr]
   (apply str (mapcat (fn [row] (concat ["<div id=\"newline\"></div>"] (map make-pixel row))) arr)))
@@ -46,4 +59,5 @@
     (->> replacements
          (partition 2)
          (reduce mod-template html)
-         println)))
+         println))
+  (spit "palette.css" (make-palette (:used @palette))))

@@ -21,14 +21,14 @@
     z-index: 10;
     width:100vw;
     height:100vh;
-    font-size:2vw;
+    font-size:1.25vw;
     background:#449;
-    filter: blur(1vw);
+    filter: blur(0.6vw);
 }
 #plane{
     position: absolute;
     top: 20vh;
-    width: 1050px;
+    width: 1250px;
     z-index: 11;
     left:20vw;
     font-size:6px;
