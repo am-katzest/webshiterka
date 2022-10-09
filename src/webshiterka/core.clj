@@ -10,13 +10,15 @@
        (mapv c/components-argb)
        (partition (m/width image))))
 
-(defn htmlize-color [colors] (apply  format "#%02x%02x%02x%02x" colors))
+(defn htmlize-color [colors]
+  (if (= 255 (last colors)) (apply  format "#%02x%02x%02x" (take 3 colors))
+      (apply  format "#%02x%02x%02x%02x" colors)))
 
 (defn make-pixel [[count colors]]
   (let [cstr (htmlize-color colors)
         width (if (= count 1) ""
                   (format "width:%dem;" count))]
-    (format "<div id=\"pixel\" style=\"background:%s;%s\"></div>" cstr width)))
+    (format "<div style=\"background:%s;%s\"></div>" cstr width)))
 
 (defn transform-pixel-array-into-html [arr]
   (apply str (mapcat (fn [row] (concat ["<div id=\"newline\"></div>"] (map make-pixel row))) arr)))

@@ -1,4 +1,5 @@
-#pixel {
+#background > *,
+#plane > * {
     /* uwu */
     display: block;
     float: left;
@@ -27,7 +28,7 @@
 #plane{
     position: absolute;
     top: 20vh;
-    width: 650px;
+    width: 1050px;
     z-index: 11;
     left:20vw;
     font-size:6px;
