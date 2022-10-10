@@ -2,7 +2,7 @@
 
 (defrecord todo [title description place dueDate])
 
-(def todos (atom []))
+(def todos (atom #{}))
 
 (defn append-todo! [new] (swap! todos conj new))
 (append-todo! (->todo "Learn JS" "Create a demo application for my TODO's" "445" (js/Date. 2019 10 16)))
@@ -48,7 +48,7 @@
   (update-todo-list))
 
 (defn deleter [item]
-  (swap! todos (fn [lst] (remove #(= % item) lst)))
+  (swap! todos disj item)
   (update-todo-list))
 
 (defn init [] (update-todo-list))
