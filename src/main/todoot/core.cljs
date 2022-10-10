@@ -14,19 +14,19 @@
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
     (->todo title desc place (js/Date. date))))
 
+(declare deleter)
+
 (defn make-deleter [item]
   (let [new-button (.createElement js/document "input")]
     (set! (.-type new-button) "button")
     (doto new-button
-      (.setAttribute  "value" "unadd")
-      ;; (.setAttribute  "onclick" (str "todoot.core.deleter(" id ")"))
-                                        ;ihateitihateitihateit
+      (.setAttribute  "value" "⌦")
       (.addEventListener "click" #(deleter item)))
     new-button))
 
 (defn htmlize-todo [td]
   (let [ret (.createElement js/document "div")
-        deleter (make-deleter td) ; good enough, there should be id's but uhh
+        deleter (make-deleter td)    ; good enough, there should be id's but uhh
         content (.createTextNode js/document (str (:title td) " " (:description td) (into {} td)))]
     (.appendChild ret deleter)
     (.appendChild ret content)
@@ -50,5 +50,21 @@
 (defn deleter [item]
   (swap! todos disj item)
   (update-todo-list))
+(defn save [] (->> @todos
+                   clj->js
+                   (.stringify js/JSON)
+                   (.setItem js/window.localStorage "todos")))
 
-(defn init [] (update-todo-list))
+(defn keywordize [x]
+  (into {} (map (fn [[k v]] [(keyword k) v]) x)))
+
+(defn load [] (when-let [read (.getItem js/window.localStorage  "todos")]
+                (->> read
+                     (.parse js/JSON)
+                     js->clj
+                     (map keywordize)
+                     (into #{})
+                     (reset! todos))
+                (update-todo-list)))
+
+(defn init [] (.addEventListener js/window "load" update-todo-list))
