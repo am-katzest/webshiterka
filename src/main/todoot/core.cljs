@@ -14,16 +14,19 @@
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
     (->todo title desc place (js/Date. date))))
 
-(defn make-deleter [id]
+(defn make-deleter [item]
   (let [new-button (.createElement js/document "input")]
     (set! (.-type new-button) "button")
-    (.setAttribute new-button "value" "unadd")
-    (.setAttribute new-button "onclick" (str "todoot.core.deleter(" id ")")) ;ihateitihateitihateit
+    (doto new-button
+      (.setAttribute  "value" "unadd")
+      ;; (.setAttribute  "onclick" (str "todoot.core.deleter(" id ")"))
+                                        ;ihateitihateitihateit
+      (.addEventListener "click" #(deleter item)))
     new-button))
 
 (defn htmlize-todo [td]
   (let [ret (.createElement js/document "div")
-        deleter (make-deleter (str "\"" (:title td) "\"")) ; good enough, there should be id's but uhh
+        deleter (make-deleter td) ; good enough, there should be id's but uhh
         content (.createTextNode js/document (str (:title td) " " (:description td) (into {} td)))]
     (.appendChild ret deleter)
     (.appendChild ret content)
@@ -44,8 +47,8 @@
   (append-todo! (read-todo))
   (update-todo-list))
 
-(defn deleter [id]
-  (swap! todos (fn [lst] (remove #(= (:title %) id) lst)))
+(defn deleter [item]
+  (swap! todos (fn [lst] (remove #(= % item) lst)))
   (update-todo-list))
 
 (defn init [] (update-todo-list))
