@@ -2,9 +2,12 @@
 
 (defrecord todo [title description place dueDate])
 
-(def todos (atom []))
+(def todos (atom {:ctr 0 :lst []}))
 
-(defn append-todo! [new] (swap! todos conj new))
+(defn append-todo! [new]
+  (swap! todos (fn [{:keys [ctr lst]}]
+                 {:ctr (inc ctr)
+                  :lst (conj lst (assoc new :id ctr))})))
 (append-todo! (->todo "Learn JS" "Create a demo application for my TODO's" "445" (js/Date. 2019 10 16)))
 (append-todo! (->todo "Lecture Test" "Quick test from the first three lectures" "F6" (js/Date. 2019 10 17)))
 
@@ -23,7 +26,7 @@
 
 (defn htmlize-todo [td]
   (let [ret (.createElement js/document "div")
-        deleter (make-deleter (str "\"" (:title td) "\"")) ; good enough, there should be id's but uhh
+        deleter (make-deleter (:id td)) ; good enough, there should be id's but uhh
         content (.createTextNode js/document (str (:title td) " " (:description td) (into {} td)))]
     (.appendChild ret deleter)
     (.appendChild ret content)
@@ -37,7 +40,7 @@
 (defn update-todo-list []
   (let [root (.getElementById js/document "todoListView")]
     (kill-all-children root)
-    (doseq [td @todos]
+    (doseq [td (:lst @todos)]
       (.appendChild root (htmlize-todo td)))))
 
 (defn add-todo []
@@ -45,7 +48,7 @@
   (update-todo-list))
 
 (defn deleter [id]
-  (swap! todos (fn [lst] (remove #(= (:title %) id) lst)))
+  (swap! todos (fn [old] (update old :lst (partial remove #(= id (:id %))))))
   (update-todo-list))
 
 (defn init [] (update-todo-list))
