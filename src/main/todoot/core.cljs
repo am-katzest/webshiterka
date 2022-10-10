@@ -7,10 +7,10 @@
 (defn append-todo! [new] (swap! todos conj new))
 (append-todo! (->todo "Learn JS" "Create a demo application for my TODO's" "445" (js/Date. 2019 10 16)))
 (append-todo! (->todo "Lecture Test" "Quick test from the first three lectures" "F6" (js/Date. 2019 10 17)))
-
+(defn get-html-value [name] (.-value (.getElementById js/document name)))
 (defn read-todo []
   (let [[title desc place date]
-        (map #(.-value (.getElementById js/document %))
+        (map get-html-value
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
     (->todo title desc place (js/Date. date))))
 
@@ -36,11 +36,16 @@
   (when-let [child (.-lastChild elem)]
     (.removeChild elem child)
     (recur elem)))
+(defn td-available [item search]
+  (or (= search "")
+      (.includes (:description item) search)
+      (.includes (:title item) search)))
 
 (defn update-todo-list []
-  (let [root (.getElementById js/document "todoListView")]
+  (let [root (.getElementById js/document "todoListView")
+        search-str (get-html-value "inputSearch")]
     (kill-all-children root)
-    (doseq [td @todos]
+    (doseq [td (filter #(td-available % search-str) @todos)]
       (.appendChild root (htmlize-todo td)))))
 
 (defn add-todo []

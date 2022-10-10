@@ -7,11 +7,6 @@
 </head>
 <body>
     <h1>MyNotes</h1>
-    <div id="todoListView">
-        <div>
-            uwu
-        </div>
-    </div>
     <form>
         <label>Title</label> <input type="text" id="inputTitle">
         <label>Description</label> <input type="text" id=
@@ -22,5 +17,15 @@
     </form><input type="button" value="sav" onclick=
     "todoot.core.save()"> <input type="button" value="load"
     onclick="todoot.core.load()">
+    <div>
+        <label>Search</label> <input type="text" id="inputSearch"
+        placeholder="Type Your seach here..." onkeypress=
+        "todoot.core.update_todo_list()">
+    </div>
+    <div id="todoListView">
+        <div>
+            uwu
+        </div>
+    </div>
 </body>
 </html>
