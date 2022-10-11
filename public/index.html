@@ -16,7 +16,7 @@
         <div class="col-3">
             <div>
                 <h1 style="text-align:center;">todoot</h1>
-                <form style="padding:20px;">
+                <form class="border" style="padding:20px;">
                     <div class="form-group">
                         <label for="inputTitle">Title</label>
                         <input type="text" class="form-control" id=
@@ -42,19 +42,31 @@
                     "todoot.core.add_todo()">
                 </form>
             </div>
-            <div>
+            <div class="border">
                 <form style="padding:20px;">
                     <div class="form-group">
                         <label for="inputSearch">Search</label>
-                        <input type="text" class="form-control" id=
-                        "inputSearch" placeholder=
+                        <input type="search" class="form-control"
+                        id="inputSearch" placeholder=
                         "Type Your seach here..." onkeypress=
+                        "todoot.core.update_todo_list()">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputBefore">only
+                        before</label> <input type="date" class=
+                        "form-control" id="inputBefore" onchange=
+                        "todoot.core.update_todo_list()">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputAfter">only after</label>
+                        <input type="date" class="form-control" id=
+                        "inputAfter" onchange=
                         "todoot.core.update_todo_list()">
                     </div>
                 </form>
             </div>
         </div>
-        <div class="col">
+        <div class="col" style="padding:20px;">
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>

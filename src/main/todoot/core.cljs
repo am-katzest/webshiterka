@@ -1,5 +1,8 @@
 (ns  todoot.core
-  (:require [ajax.core :as ax]))
+  (:require [ajax.core :as ax]
+            [cljs-time.core :as t]
+            [cljs-time.format :as tf]
+            [cljs-time.coerce :as tt]))
 
 (def api-key "$2b$10$WeANikw9XvZVJZENB5lcOedfsqnvEEtJtPFzotoM7i3UhU/eYuP1S")
 
@@ -30,7 +33,7 @@
   (let [[title desc place date]
         (map get-html-value
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
-    (->todo title desc place (clj->js (js/Date. date)))))
+    (->todo title desc place (t/date-time (js/Date. date)))))
 
 (declare deleter)
 
@@ -58,6 +61,7 @@
 (defn htmlize-todo [td]
   (->> td
        ((juxt :title :dueDate :place :description))
+       (apply (fn [a b c d] [a (tf/unparse (tf/formatter "yyyy-MM-dd") b) c d]))
        (map text-nodize)
        (cons (make-deleter td))
        (map #(make-table-entry % "td"))
@@ -91,13 +95,14 @@
   (save))
 
 (defn get-todos [] (->> @todos
+                        (map #(update % :dueDate tt/to-date))
                         clj->js
                         (.stringify js/JSON)))
 
 (defn save [] (send-todos-to-api (get-todos)))
 
 (defn recover [x]
-  (update (into {} (map (fn [[k v]] [(keyword k) v]) x)) :dueDate #(js/Date. %)))
+  (update (into {} (map (fn [[k v]] [(keyword k) v]) x)) :dueDate #(tt/from-date (js/Date. %))))
 
 (defn load-todos! [new]
   (->> new
