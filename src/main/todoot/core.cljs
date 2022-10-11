@@ -30,7 +30,7 @@
   (let [[title desc place date]
         (map get-html-value
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
-    (->todo title desc place (js/Date. date))))
+    (->todo title desc place (clj->js (js/Date. date)))))
 
 (declare deleter)
 
@@ -41,6 +41,7 @@
     (set! (.-type new-button) "button")
     (doto new-button
       (.setAttribute  "value" "⌦")
+      (.setAttribute  "class" "btn")
       (.addEventListener "click" #(deleter item)))
     new-button))
 
@@ -95,13 +96,13 @@
 
 (defn save [] (send-todos-to-api (get-todos)))
 
-(defn keywordize [x]
-  (into {} (map (fn [[k v]] [(keyword k) v]) x)))
+(defn recover [x]
+  (update (into {} (map (fn [[k v]] [(keyword k) v]) x)) :dueDate #(js/Date. %)))
 
 (defn load-todos! [new]
   (->> new
        js->clj
-       (map keywordize)
+       (map recover)
        (into #{})
        (reset! todos)))
 
