@@ -106,9 +106,11 @@
        (into #{})))
 
 ;; bin <-> todos atom
-(defn save [] (bin/send-todos-to-api (todos->json @todos)))
+(defn save [] (-> @todos todos->json bin/send-todos-to-api))
 
-(defn load [] (bin/get-todos-from-api #(do (reset! todos (json->todos %)) (update-todo-list))))
+(defn load [] (bin/get-todos-from-api
+               #(do (reset! todos (json->todos %))
+                    (update-todo-list))))
 
 ;; is called at the beginning
 (defn init []
