@@ -46,18 +46,21 @@
 
 (defn make-table-entry [child type]
   (doto (.createElement js/document type)
-    (.appentChild child)))
+    (.appendChild child)))
 
 (defn text-nodize [text] (.createTextNode js/document text))
-
-(defn htmlize-todo [td]
-  (let [row (.createElement js/document "tr")
-        deleter (make-deleter td)    ; good enough, there should be id's but uhh
-        rows (map text-nodize ((juxt :title :date :place) td))
-        children (cons deleter rows)]
-    (doseq [child children]
-      (.appendChild (make-table-entry child "td")))
+(defn make-row [nodes]
+  (let [row (.createElement js/document "tr")]
+    (doseq [n nodes]
+      (.appendChild row n))
     row))
+(defn htmlize-todo [td]
+  (->> td
+       ((juxt :title :dueDate :place :description))
+       (map text-nodize)
+       (cons (make-deleter td))
+       (map #(make-table-entry % "td"))
+       make-row))
 
 (defn kill-all-children [elem]
   (when-let [child (.-lastChild elem)]
