@@ -5,7 +5,7 @@
   "src/test"]
 
  :dependencies
- []
+ [[cljs-ajax "0.7.5"]]
  :dev-http {9000 "public"}
  :builds
  {:frontend
