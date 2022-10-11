@@ -33,6 +33,7 @@
     (->todo title desc place (js/Date. date))))
 
 (declare deleter)
+
 (declare save)
 
 (defn make-deleter [item]
@@ -88,7 +89,9 @@
 (defn get-todos [] (->> @todos
                         clj->js
                         (.stringify js/JSON)))
+
 (defn save [] (send-todos-to-api (get-todos)))
+
 (defn keywordize [x]
   (into {} (map (fn [[k v]] [(keyword k) v]) x)))
 
@@ -100,5 +103,6 @@
        (reset! todos)))
 
 (defn load [] (get-todos-from-api #(do (load-todos! %) (update-todo-list))))
+
 (defn init [] (load)
   (.addEventListener js/window "load" update-todo-list))
