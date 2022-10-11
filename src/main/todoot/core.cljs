@@ -28,12 +28,12 @@
 (defn append-todo! [new] (swap! todos conj new))
 
 (defn get-html-value [name] (.-value (.getElementById js/document name)))
-
+(defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 (defn read-todo []
   (let [[title desc place date]
         (map get-html-value
              ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
-    (->todo title desc place (t/date-time (js/Date. date)))))
+    (->todo title desc place (parse-date date))))
 
 (declare deleter)
 
@@ -73,9 +73,13 @@
     (recur elem)))
 
 (defn td-available [item search]
-  (or (= search "")
-      (.includes (:description item) search)
-      (.includes (:title item) search)))
+  (and (or (= search "")
+           (.includes (:description item) search)
+           (.includes (:title item) search))
+       (if-let [lower-bound (parse-date (get-html-value "inputAfter"))]
+         (t/after? (:dueDate  item) lower-bound) true)
+       (if-let [upper-bound (parse-date (get-html-value "inputBefore"))]
+         (t/before? (:dueDate  item) upper-bound) true)))
 
 (defn update-todo-list []
   (let [root (.getElementById js/document "todoListView")
