@@ -1,26 +1,23 @@
 (ns  todoot.core
-  (:require [ajax.core :as ax]
-            [cljs-time.core :as t]
-            [cljs-time.format :as tf]
-            [cljs-time.coerce :as tt]
-            [dommy.core :refer-macros [sel1] :as dom]))
+  (:require
+   [cljs-time.core :as t]
+   [cljs-time.format :as tf]
+   [cljs-time.coerce :as tt]
+   [dommy.core :refer-macros [sel1] :as dom]
+   [todoot.bin :as bin]))
 
-(def api-key "$2b$10$WeANikw9XvZVJZENB5lcOedfsqnvEEtJtPFzotoM7i3UhU/eYuP1S")
+;; code is a little mangled
 
-(def bin "634471970e6a79321e23f901")
+(declare delete-todo)
 
-(defn get-todos-from-api [cb]
-  (ax/GET (str "https://api.jsonbin.io/v3/b/" bin)
-    {:headers {:X-Access-Key api-key}
-     :handler #(cb (get % "record"))
-     :error-handler #(js/alert %)}))
+(declare save)
 
-(defn send-todos-to-api [json]
-  (comment (ax/POST (str "https://api.jsonbin.io/v3/b/" bin)
-             {:headers {:X-Access-Key api-key}
-              :contentType "application/json"
-              :data json
-              :error-handler #(js/alert %)})))
+;; utils
+(defn selv [name] (-> name sel1 dom/value))
+
+(defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
+
+;; data
 
 (defrecord todo [title description place dueDate])
 
@@ -28,22 +25,20 @@
 
 (defn append-todo! [new] (swap! todos conj new))
 
-(defn selv [name] (-> name sel1 dom/value))
-(defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 (defn read-todo []
   (->todo (selv :#inputTitle)
           (selv :#inputDescription)
           (selv :#inputPlace)
           (parse-date (selv :#inputDate))))
 
-(declare deleter)
+;; displaying
 
-(declare save)
+;; ;; table
 
 (defn make-deleter [item]
   (-> (dom/create-element :input)
       (dom/set-attr! :type "button", :value "⌦", :class "btn")
-      (dom/listen! :click #(deleter item))))
+      (dom/listen! :click #(delete-todo item))))
 
 (defn make-table-entry [child]
   (-> (dom/create-element :td)
@@ -63,7 +58,7 @@
        (map make-table-entry)
        make-row))
 
-(defn td-available [item]
+(defn is-avialable? [item]
   (and (let [search (selv :#inputSearch)]
          (or (= search "")
              (.includes (:description item) search)
@@ -77,38 +72,45 @@
   (let [root (sel1 :#todoListView)]
     (dom/clear! root)
     (->> @todos
-         (filter td-available)
+         (filter is-avialable?)
          (map htmlize-todo)
          (reduce dom/append! root))))
+
+;; modifying of todo list
 
 (defn add-todo []
   (append-todo! (read-todo))
   (update-todo-list)
   (save))
 
-(defn deleter [item]
+(defn delete-todo [item]
   (swap! todos disj item)
   (update-todo-list)
   (save))
 
-(defn get-todos [] (->> @todos
-                        (map #(update % :dueDate tt/to-date))
-                        clj->js
-                        (.stringify js/JSON)))
+;; json handling
+(defn todos->json [x]
+  (->> x
+       (map #(update % :dueDate tt/to-date))
+       clj->js
+       (.stringify js/JSON)))
 
-(defn save [] (send-todos-to-api (get-todos)))
+(defn recover-todo-post-jsonification [x]
+  (update (into {} (map (fn [[k v]] [(keyword k) v]) x))
+          :dueDate parse-date))
 
-(defn recover [x]
-  (update (into {} (map (fn [[k v]] [(keyword k) v]) x)) :dueDate #(tt/from-date (js/Date. %))))
-
-(defn load-todos! [new]
+(defn json->todos [new]
   (->> new
        js->clj
-       (map recover)
-       (into #{})
-       (reset! todos)))
+       (map recover-todo-post-jsonification)
+       (into #{})))
 
-(defn load [] (get-todos-from-api #(do (load-todos! %) (update-todo-list))))
+;; bin <-> todos atom
+(defn save [] (bin/send-todos-to-api (todos->json @todos)))
+
+(defn load [] (bin/get-todos-from-api #(do (reset! todos (json->todos %)) (update-todo-list))))
+
+;; is called at the beginning
 (defn init []
   (load)
   (dom/listen! js/window :load update-todo-list))
