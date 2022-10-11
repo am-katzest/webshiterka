@@ -2,19 +2,30 @@
   (:require [ajax.core :as ax]))
 
 (def api-key "$2b$10$WeANikw9XvZVJZENB5lcOedfsqnvEEtJtPFzotoM7i3UhU/eYuP1S")
+
 (def bin "634471970e6a79321e23f901")
+
 (defn get-todos-from-api [cb]
   (ax/GET (str "https://api.jsonbin.io/v3/b/" bin)
     {:headers {:X-Access-Key api-key}
      :handler #(cb (get % "record"))
      :error-handler #(js/alert %)}))
 
+(defn send-todos-to-api [json]
+  (comment (ax/POST (str "https://api.jsonbin.io/v3/b/" bin)
+             {:headers {:X-Access-Key api-key}
+              :contentType "application/json"
+              :data json
+              :error-handler #(js/alert %)})))
+
 (defrecord todo [title description place dueDate])
 
 (defonce todos (atom #{}))
 
 (defn append-todo! [new] (swap! todos conj new))
+
 (defn get-html-value [name] (.-value (.getElementById js/document name)))
+
 (defn read-todo []
   (let [[title desc place date]
         (map get-html-value
@@ -22,6 +33,7 @@
     (->todo title desc place (js/Date. date))))
 
 (declare deleter)
+(declare save)
 
 (defn make-deleter [item]
   (let [new-button (.createElement js/document "input")]
@@ -31,18 +43,26 @@
       (.addEventListener "click" #(deleter item)))
     new-button))
 
+(defn make-table-entry [child type]
+  (doto (.createElement js/document type)
+    (.appentChild child)))
+
+(defn text-nodize [text] (.createTextNode js/document text))
+
 (defn htmlize-todo [td]
-  (let [ret (.createElement js/document "div")
+  (let [row (.createElement js/document "tr")
         deleter (make-deleter td)    ; good enough, there should be id's but uhh
-        content (.createTextNode js/document (str (:title td) " " (:description td) (into {} td)))]
-    (.appendChild ret deleter)
-    (.appendChild ret content)
-    ret))
+        rows (map text-nodize ((juxt :title :date :place) td))
+        children (cons deleter rows)]
+    (doseq [child children]
+      (.appendChild (make-table-entry child "td")))
+    row))
 
 (defn kill-all-children [elem]
   (when-let [child (.-lastChild elem)]
     (.removeChild elem child)
     (recur elem)))
+
 (defn td-available [item search]
   (or (= search "")
       (.includes (:description item) search)
@@ -57,16 +77,18 @@
 
 (defn add-todo []
   (append-todo! (read-todo))
-  (update-todo-list))
+  (update-todo-list)
+  (save))
 
 (defn deleter [item]
   (swap! todos disj item)
-  (update-todo-list))
+  (update-todo-list)
+  (save))
 
 (defn get-todos [] (->> @todos
                         clj->js
                         (.stringify js/JSON)))
-
+(defn save [] (send-todos-to-api (get-todos)))
 (defn keywordize [x]
   (into {} (map (fn [[k v]] [(keyword k) v]) x)))
 
@@ -76,5 +98,7 @@
        (map keywordize)
        (into #{})
        (reset! todos)))
-(defn init [] (get-todos-from-api #(do (load-todos! %) (update-todo-list)))
+
+(defn load [] (get-todos-from-api #(do (load-todos! %) (update-todo-list))))
+(defn init [] (load)
   (.addEventListener js/window "load" update-todo-list))
