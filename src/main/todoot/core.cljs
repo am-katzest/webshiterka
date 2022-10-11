@@ -2,7 +2,8 @@
   (:require [ajax.core :as ax]
             [cljs-time.core :as t]
             [cljs-time.format :as tf]
-            [cljs-time.coerce :as tt]))
+            [cljs-time.coerce :as tt]
+            [dommy.core :refer-macros [sel1] :as dom]))
 
 (def api-key "$2b$10$WeANikw9XvZVJZENB5lcOedfsqnvEEtJtPFzotoM7i3UhU/eYuP1S")
 
@@ -27,66 +28,58 @@
 
 (defn append-todo! [new] (swap! todos conj new))
 
-(defn get-html-value [name] (.-value (.getElementById js/document name)))
+(defn selv [name] (-> name sel1 dom/value))
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 (defn read-todo []
-  (let [[title desc place date]
-        (map get-html-value
-             ["inputTitle" "inputDescription" "inputPlace" "inputDate"])]
-    (->todo title desc place (parse-date date))))
+  (->todo (selv :#inputTitle)
+          (selv :#inputDescription)
+          (selv :#inputPlace)
+          (parse-date (selv :#inputDate))))
 
 (declare deleter)
 
 (declare save)
 
 (defn make-deleter [item]
-  (let [new-button (.createElement js/document "input")]
-    (set! (.-type new-button) "button")
-    (doto new-button
-      (.setAttribute  "value" "⌦")
-      (.setAttribute  "class" "btn")
-      (.addEventListener "click" #(deleter item)))
-    new-button))
+  (-> (dom/create-element :input)
+      (dom/set-attr! :type "button", :value "⌦", :class "btn")
+      (dom/listen! :click #(deleter item))))
 
-(defn make-table-entry [child type]
-  (doto (.createElement js/document type)
-    (.appendChild child)))
+(defn make-table-entry [child]
+  (-> (dom/create-element :td)
+      (dom/append! child)))
 
-(defn text-nodize [text] (.createTextNode js/document text))
 (defn make-row [nodes]
-  (let [row (.createElement js/document "tr")]
-    (doseq [n nodes]
-      (.appendChild row n))
-    row))
+  (apply dom/append! (dom/create-element :tr) nodes))
+
 (defn htmlize-todo [td]
   (->> td
-       ((juxt :title :dueDate :place :description))
-       (apply (fn [a b c d] [a (tf/unparse (tf/formatter "yyyy-MM-dd") b) c d]))
-       (map text-nodize)
+       ((juxt :title
+              #(tf/unparse (tf/formatter "yyyy-MM-dd") (:dueDate %))
+              :place
+              :description))
+       (map dom/create-text-node)
        (cons (make-deleter td))
-       (map #(make-table-entry % "td"))
+       (map make-table-entry)
        make-row))
 
-(defn kill-all-children [elem]
-  (when-let [child (.-lastChild elem)]
-    (.removeChild elem child)
-    (recur elem)))
-
-(defn td-available [item search]
-  (and (or (= search "")
-           (.includes (:description item) search)
-           (.includes (:title item) search))
-       (if-let [lower-bound (parse-date (get-html-value "inputAfter"))]
+(defn td-available [item]
+  (and (let [search (selv :#inputSearch)]
+         (or (= search "")
+             (.includes (:description item) search)
+             (.includes (:title item) search)))
+       (if-let [lower-bound (parse-date (selv :#inputAfter))]
          (t/after? (:dueDate  item) lower-bound) true)
-       (if-let [upper-bound (parse-date (get-html-value "inputBefore"))]
+       (if-let [upper-bound (parse-date (selv :#inputBefore))]
          (t/before? (:dueDate  item) upper-bound) true)))
 
 (defn update-todo-list []
-  (let [root (.getElementById js/document "todoListView")
-        search-str (get-html-value "inputSearch")]
-    (kill-all-children root)
-    (doseq [td (filter #(td-available % search-str) @todos)]
-      (.appendChild root (htmlize-todo td)))))
+  (let [root (sel1 :#todoListView)]
+    (dom/clear! root)
+    (->> @todos
+         (filter td-available)
+         (map htmlize-todo)
+         (reduce dom/append! root))))
 
 (defn add-todo []
   (append-todo! (read-todo))
@@ -116,6 +109,6 @@
        (reset! todos)))
 
 (defn load [] (get-todos-from-api #(do (load-todos! %) (update-todo-list))))
-
-(defn init [] (load)
-  (.addEventListener js/window "load" update-todo-list))
+(defn init []
+  (load)
+  (dom/listen! js/window :load update-todo-list))
