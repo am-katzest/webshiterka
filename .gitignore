@@ -19,3 +19,6 @@ pom.xml.asc
 /test/
 /smolsky.png
 /smolplane.png
+/.shadow-cljs/
+/node_modules/
+/public/
