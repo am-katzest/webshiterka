@@ -29,9 +29,9 @@
     top: 20vh;
     z-index: 11;
     width: 20000px;
-    left:20vw;
-    font-size:3px;
-    filter: blur(1.5px);
+    left:10vw;
+    font-size:0.2vw;
+    filter: blur(0.05vw);
 }
 * {
     overflow: hidden;
