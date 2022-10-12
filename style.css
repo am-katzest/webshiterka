@@ -13,14 +13,13 @@
     height: 0px;
     background: pink;
 }
-
 #background{
     top:0;
     left:0;
     position: absolute;
     z-index: 10;
-    width:100vw;
-    height:100vh;
+    width:150vw;
+    height:150vh;
     font-size:1.25vw;
     background:#449;
     filter: blur(0.6vw);
@@ -28,9 +27,12 @@
 #plane{
     position: absolute;
     top: 20vh;
-    width: 1500px;
     z-index: 11;
+    width: 20000px;
     left:20vw;
     font-size:3px;
     filter: blur(1.5px);
+}
+* {
+    overflow: hidden;
 }
