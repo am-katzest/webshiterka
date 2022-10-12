@@ -13,7 +13,7 @@
 (declare save)
 
 ;; utils
-(defn selv [name] (-> name sel1 dom/value))
+(def selv (comp sel1 dom/value))
 
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 
