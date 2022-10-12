@@ -6,11 +6,11 @@
     width: 1em; /* configured via font-size in parent element*/
     height: 1em;
 }
-#newline{
+.newline{
     display: block;
     float: left;
-    width: 100%;
-    height: 0px;
+    width: 100% !important;
+    height: 0px !important;
     background: pink;
 }
 
@@ -28,9 +28,12 @@
 #plane{
     position: absolute;
     top: 20vh;
-    width: 1250px;
+    width: 100vw;
     z-index: 11;
     left:20vw;
-    font-size:6px;
-    filter: blur(4px);
+    font-size:0.3vw;
+    filter: blur(0.1vw);
+}
+* {
+    overflow: hidden;
 }
