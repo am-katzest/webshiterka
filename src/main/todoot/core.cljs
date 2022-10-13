@@ -13,7 +13,7 @@
 (declare save)
 
 ;; utils
-(def selv (comp sel1 dom/value))
+(defn selv [x] (dom/value (sel1 x)))
 
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 
@@ -59,6 +59,7 @@
        make-row))
 
 (defn is-avialable? [item]
+  (js/alert (selv :#inputSearch))
   (and (let [search (selv :#inputSearch)]
          (or (= search "")
              (.includes (:description item) search)
