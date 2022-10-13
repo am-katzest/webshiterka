@@ -59,11 +59,12 @@
        make-row))
 
 (defn is-avialable? [item]
-  (js/alert (selv :#inputSearch))
-  (and (let [search (selv :#inputSearch)]
+  (and (let [Search (selv :#inputSearch)
+             search (.toLowerCase Search)
+             matches #(.includes (.toLowerCase %) search)]
          (or (= search "")
-             (.includes (:description item) search)
-             (.includes (:title item) search)))
+             (matches (:description item))
+             (matches (:title item))))
        (if-let [lower-bound (parse-date (selv :#inputAfter))]
          (t/after? (:dueDate  item) lower-bound) true)
        (if-let [upper-bound (parse-date (selv :#inputBefore))]
