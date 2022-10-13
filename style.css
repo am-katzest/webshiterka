@@ -27,7 +27,7 @@
 }
 #plane{
     position: absolute;
-    top: 20vh;
+    top: 10vw;
     width: 100vw;
     z-index: 11;
     left:20vw;
