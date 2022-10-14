@@ -18,13 +18,16 @@
 
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 
+(defn append! [root children]
+  (doseq [c children]
+    (.append root c))
+  root)
+
 ;; data
 
 (defrecord todo [title description place dueDate])
 
 (defonce todos (atom #{}))
-
-(defn append-todo! [new] (swap! todos conj new))
 
 (defn read-todo []
   (->todo (v$ "#inputTitle")
@@ -48,7 +51,7 @@
       (.append child)))
 
 (defn make-row [nodes]
-  (reduce #(.append %1 %2) ($ "<tr>") nodes))
+  (append! ($ "<tr>") nodes))
 
 (defn htmlize-todo [td]
   (->> td
@@ -78,12 +81,12 @@
     (->> @todos
          (filter is-avialable?)
          (map htmlize-todo)
-         (reduce #(.append %1 %2) root))))
+         (append! root))))
 
 ;; modifying of todo list
 
 (defn add-todo []
-  (append-todo! (read-todo))
+  (swap! todos conj (read-todo))
   (update-todo-list)
   (save))
 
