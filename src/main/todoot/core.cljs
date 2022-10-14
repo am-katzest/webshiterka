@@ -11,8 +11,6 @@
 
 (declare delete-todo!)
 
-(declare save)
-
 ;; utils
 (defn v$ [x] (.val ($ x)))
 
@@ -41,31 +39,31 @@
 
 ;; ;; table
 
-(defn make-deleter [item]
+(defn make-delete-btn [item]
   (doto ($ "<input>")
     (.attr "type" "button")
     (.attr "value" "⌦")
     (.attr "class" "btn")
     (.on "click" #(delete-todo! item))))
 
-(defn make-table-entry [child]
+(defn into-table-cell [child]
   (-> ($ "<td>")
       (.append child)))
 
-(defn make-row [nodes]
+(defn into-table-row [nodes]
   (append! ($ "<tr>") nodes))
 
-(defn htmlize-todo [td]
+(defn todo->html [td]
   (->> td
        ((juxt :title
               #(tf/unparse (tf/formatter "yyyy-MM-dd") (:dueDate %))
               :place
               :description))
-       (cons (make-deleter td))
-       (map make-table-entry)
-       make-row))
+       (cons (make-delete-btn td))
+       (map into-table-cell)
+       into-table-row))
 
-(defn is-avialable? [item]
+(defn avialable? [item]
   (let [Search (v$ "#inputSearch")
         search (.toLowerCase Search)
         matches #(.includes (.toLowerCase %) search)
@@ -80,25 +78,13 @@
          (or (nil? upper-bound)
              (t/before? date upper-bound)))))
 
-(defn update-todo-list []
+(defn redraw-todos []
   (let [root ($ "#todoListView")]
     (.empty root)
     (->> @todos
-         (filter is-avialable?)
-         (map htmlize-todo)
+         (filter avialable?)
+         (map todo->html)
          (append! root))))
-
-;; modifying of todo list
-
-(defn add-todo! [item]
-  (swap! todos conj item)
-  (update-todo-list)
-  (save))
-
-(defn delete-todo! [item]
-  (swap! todos disj item)
-  (update-todo-list)
-  (save))
 
 ;; json handling
 (defn todos->json [x]
@@ -107,29 +93,41 @@
        clj->js
        (.stringify js/JSON)))
 
-(defn recover-todo-post-jsonification [x]
+(defn fix-todo [x]
   (update (into {} (map (fn [[k v]] [(keyword k) v]) x))
           :dueDate parse-date))
 
 (defn json->todos [new]
   (->> new
        js->clj
-       (map recover-todo-post-jsonification)
+       (map fix-todo)
        (into #{})))
 
 ;; bin <-> todos atom
-(defn save [] (-> @todos todos->json bin/send-todos-to-api))
+(defn save! [] (-> @todos todos->json bin/send-todos-to-api))
 
-(defn load [] (bin/get-todos-from-api
-               #(do (reset! todos (json->todos %))
-                    (update-todo-list))))
+(defn load! [] (bin/get-todos-from-api
+                #(do (reset! todos (json->todos %))
+                     (redraw-todos))))
+
+;; modifying of todo list
+
+(defn add-todo! [item]
+  (swap! todos conj item)
+  (redraw-todos)
+  (save!))
+
+(defn delete-todo! [item]
+  (swap! todos disj item)
+  (redraw-todos)
+  (save!))
 
 ;; is called at the beginning
 (defn init []
-  (load)
+  (load!)
   ($ (fn []
        (.on ($ "#addTodo") "click" #(add-todo! (read-todo)))
-       (.on ($ "#inputSearch") "keyup" update-todo-list)
-       (.on ($ "#inputBefore") "change" update-todo-list)
-       (.on ($ "#inputAfter") "change" update-todo-list)
-       (update-todo-list))))
+       (.on ($ "#inputSearch") "keyup" redraw-todos)
+       (.on ($ "#inputBefore") "change" redraw-todos)
+       (.on ($ "#inputAfter") "change" redraw-todos)
+       (redraw-todos))))
