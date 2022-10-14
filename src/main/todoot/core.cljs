@@ -18,6 +18,8 @@
 
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 
+(defn d$ [x] (parse-date (v$ x)))
+
 (defn append! [root children]
   (doseq [c children]
     (.append root c))
@@ -33,7 +35,7 @@
   (->todo (v$ "#inputTitle")
           (v$ "#inputDescription")
           (v$ "#inputPlace")
-          (parse-date (v$ "#inputDate"))))
+          (d$ "#inputDate")))
 
 ;; displaying
 
@@ -64,16 +66,19 @@
        make-row))
 
 (defn is-avialable? [item]
-  (and (let [Search (v$ "#inputSearch")
-             search (.toLowerCase Search)
-             matches #(.includes (.toLowerCase %) search)]
-         (or (= search "")
+  (let [Search (v$ "#inputSearch")
+        search (.toLowerCase Search)
+        matches #(.includes (.toLowerCase %) search)
+        lower-bound (d$ "#inputAfter")
+        upper-bound (d$ "#inputBefore")
+        date (:dueDate item)]
+    (and (or (= search "")
              (matches (:description item))
-             (matches (:title item))))
-       (if-let [lower-bound (parse-date (v$ "#inputAfter"))]
-         (t/after? (:dueDate  item) lower-bound) true)
-       (if-let [upper-bound (parse-date (v$ "#inputBefore"))]
-         (t/before? (:dueDate  item) upper-bound) true)))
+             (matches (:title item)))
+         (or (nil? lower-bound)
+             (t/after? date lower-bound))
+         (or (nil? upper-bound)
+             (t/before? date upper-bound)))))
 
 (defn update-todo-list []
   (let [root ($ "#todoListView")]
