@@ -40,9 +40,8 @@
                         <label for="inputDate">Due date</label>
                         <input type="date" class="form-control" id=
                         "inputDate">
-                    </div><input type="button" class=
-                    "btn btn-primary" value="Add" onclick=
-                    "todoot.core.add_todo()">
+                    </div><input id="addTodo" type="button" class=
+                    "btn btn-primary" value="Add">
                 </form>
             </div>
             <div class="border">
@@ -51,14 +50,12 @@
                         <label for="inputSearch">Search</label>
                         <input type="search" class="form-control"
                         id="inputSearch" placeholder=
-                        "Type Your seach here..." onkeyup=
-                        "todoot.core.update_todo_list()">
+                        "Type Your seach here...">
                     </div>
                     <div class="form-group">
                         <label for="inputBefore">only
                         before</label> <input type="date" class=
-                        "form-control" id="inputBefore" onchange=
-                        "todoot.core.update_todo_list()">
+                        "form-control" id="inputBefore">
                     </div>
                     <div class="form-group">
                         <label for="inputAfter">only after</label>

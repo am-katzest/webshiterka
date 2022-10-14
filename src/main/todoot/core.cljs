@@ -9,7 +9,7 @@
 
 ;; code is a little mangled
 
-(declare delete-todo)
+(declare delete-todo!)
 
 (declare save)
 
@@ -46,7 +46,7 @@
     (.attr "type" "button")
     (.attr "value" "⌦")
     (.attr "class" "btn")
-    (.on "click" #(delete-todo item))))
+    (.on "click" #(delete-todo! item))))
 
 (defn make-table-entry [child]
   (-> ($ "<td>")
@@ -90,12 +90,12 @@
 
 ;; modifying of todo list
 
-(defn add-todo []
-  (swap! todos conj (read-todo))
+(defn add-todo! [item]
+  (swap! todos conj item)
   (update-todo-list)
   (save))
 
-(defn delete-todo [item]
+(defn delete-todo! [item]
   (swap! todos disj item)
   (update-todo-list)
   (save))
@@ -127,4 +127,9 @@
 ;; is called at the beginning
 (defn init []
   (load)
-  ($ update-todo-list))
+  ($ (fn []
+       (.on ($ "#addTodo") "click" #(add-todo! (read-todo)))
+       (.on ($ "#inputSearch") "keyup" update-todo-list)
+       (.on ($ "#inputBefore") "change" update-todo-list)
+       (.on ($ "#inputAfter") "change" update-todo-list)
+       (update-todo-list))))
