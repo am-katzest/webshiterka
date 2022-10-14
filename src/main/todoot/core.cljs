@@ -3,8 +3,9 @@
    [cljs-time.core :as t]
    [cljs-time.format :as tf]
    [cljs-time.coerce :as tt]
-   [dommy.core :refer-macros [sel1] :as dom]
    [todoot.bin :as bin]))
+
+(def $ (js* "$")) ;; jquery is imported via html
 
 ;; code is a little mangled
 
@@ -13,7 +14,7 @@
 (declare save)
 
 ;; utils
-(defn selv [x] (dom/value (sel1 x)))
+(defn v$ [x] (.val ($ x)))
 
 (defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
 
@@ -26,26 +27,28 @@
 (defn append-todo! [new] (swap! todos conj new))
 
 (defn read-todo []
-  (->todo (selv :#inputTitle)
-          (selv :#inputDescription)
-          (selv :#inputPlace)
-          (parse-date (selv :#inputDate))))
+  (->todo (v$ "#inputTitle")
+          (v$ "#inputDescription")
+          (v$ "#inputPlace")
+          (parse-date (v$ "#inputDate"))))
 
 ;; displaying
 
 ;; ;; table
 
 (defn make-deleter [item]
-  (-> (dom/create-element :input)
-      (dom/set-attr! :type "button", :value "⌦", :class "btn")
-      (dom/listen! :click #(delete-todo item))))
+  (doto ($ "<input>")
+    (.attr "type" "button")
+    (.attr "value" "⌦")
+    (.attr "class" "btn")
+    (.on "click" #(delete-todo item))))
 
 (defn make-table-entry [child]
-  (-> (dom/create-element :td)
-      (dom/append! child)))
+  (-> ($ "<td>")
+      (.append child)))
 
 (defn make-row [nodes]
-  (apply dom/append! (dom/create-element :tr) nodes))
+  (reduce #(.append %1 %2) ($ "<tr>") nodes))
 
 (defn htmlize-todo [td]
   (->> td
@@ -53,30 +56,29 @@
               #(tf/unparse (tf/formatter "yyyy-MM-dd") (:dueDate %))
               :place
               :description))
-       (map dom/create-text-node)
        (cons (make-deleter td))
        (map make-table-entry)
        make-row))
 
 (defn is-avialable? [item]
-  (and (let [Search (selv :#inputSearch)
+  (and (let [Search (v$ "#inputSearch")
              search (.toLowerCase Search)
              matches #(.includes (.toLowerCase %) search)]
          (or (= search "")
              (matches (:description item))
              (matches (:title item))))
-       (if-let [lower-bound (parse-date (selv :#inputAfter))]
+       (if-let [lower-bound (parse-date (v$ "#inputAfter"))]
          (t/after? (:dueDate  item) lower-bound) true)
-       (if-let [upper-bound (parse-date (selv :#inputBefore))]
+       (if-let [upper-bound (parse-date (v$ "#inputBefore"))]
          (t/before? (:dueDate  item) upper-bound) true)))
 
 (defn update-todo-list []
-  (let [root (sel1 :#todoListView)]
-    (dom/clear! root)
+  (let [root ($ "#todoListView")]
+    (.empty root)
     (->> @todos
          (filter is-avialable?)
          (map htmlize-todo)
-         (reduce dom/append! root))))
+         (reduce #(.append %1 %2) root))))
 
 ;; modifying of todo list
 
@@ -117,4 +119,4 @@
 ;; is called at the beginning
 (defn init []
   (load)
-  (dom/listen! js/window :load update-todo-list))
+  ($ update-todo-list))
