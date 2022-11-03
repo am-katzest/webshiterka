@@ -2,8 +2,7 @@
   (:require
    [cljs-time.core :as t]
    [cljs-time.format :as tf]
-   [cljs-time.coerce :as tt]
-   [todoot.bin :as bin]))
+   [ajax.core :as ax]))
 
 (def $ (js* "$")) ;; jquery is imported via html
 
@@ -14,7 +13,7 @@
 ;; utils
 (defn v$ [x] (.val ($ x)))
 
-(defn parse-date  [date] (if (= date "") nil (t/date-time (js/Date. date))))
+(defn parse-date  [date] (if (= date "") nil (js/Date. date)))
 
 (defn d$ [x] (parse-date (v$ x)))
 
@@ -56,7 +55,10 @@
 (defn todo->html [td]
   (->> td
        ((juxt :title
-              #(tf/unparse (tf/formatter "yyyy-MM-dd") (:dueDate %))
+              #(->> %
+                    :dueDate
+                    t/date-time
+                    (tf/unparse (tf/formatter "yyyy-MM-dd")))
               :place
               :description))
        (cons (make-delete-btn td))
@@ -74,9 +76,9 @@
              (matches (:description item))
              (matches (:title item)))
          (or (nil? lower-bound)
-             (t/after? date lower-bound))
+             (>= date lower-bound))
          (or (nil? upper-bound)
-             (t/before? date upper-bound)))))
+             (<= date upper-bound)))))
 
 (defn redraw-todos []
   (let [root ($ "#todoListView")]
@@ -89,7 +91,6 @@
 ;; json handling
 (defn todos->json [x]
   (->> x
-       (map #(update % :dueDate tt/to-date))
        clj->js
        (.stringify js/JSON)))
 
@@ -104,9 +105,27 @@
        (into #{})))
 
 ;; bin <-> todos atom
-(defn save! [] (-> @todos todos->json bin/send-todos-to-api))
 
-(defn load! [] (bin/get-todos-from-api
+(def api-key "$2b$10$aTUTTwvgslmXXpwWAxJ4j.hyTIPO4yMsSeE6vtZzRhBafUjQXKMA6")
+
+(def bin-url (str "https://api.jsonbin.io/v3/b/" "634471970e6a79321e23f901"))
+
+(defn get-todos-from-api [cb]
+  (ax/GET bin-url
+    {:headers {:X-Master-Key api-key}
+     :handler #(cb (get % "record"))
+     :error-handler #(js/alert %)}))
+
+(defn send-todos-to-api [data]
+  (ax/PUT bin-url
+    {:headers {:X-Master-Key api-key
+               :Content-Type "application/json"}
+     :body data
+     :error-handler #(js/alert %)}))
+
+(defn save! [] (-> @todos todos->json send-todos-to-api))
+
+(defn load! [] (get-todos-from-api
                 #(do (reset! todos (json->todos %))
                      (redraw-todos))))
 
